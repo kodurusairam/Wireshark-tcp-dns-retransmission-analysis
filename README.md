@@ -13,7 +13,7 @@ This project involves a comprehensive deep-dive into network traffic using **Wir
 The foundation of this analysis is the provided `.pcap` (Packet Capture) file. This file contains raw frames captured from a network interface, allowing for the inspection of Layer 2 through Layer 7 protocols.
 
 * **File Name:** `network_dump.pcap`
-* **Tooling:** Wireshark / TShark
+* **Tooling:** Wireshark / Windows os / Chrome Browser
 
 ---
 
@@ -51,3 +51,11 @@ Network conditions aren't always perfect. This section documents the identificat
 * **Identification:** Used the filter `tcp.analysis.retransmission`.
 * **Observation:** Highlighted packets marked in **Black/Red** by Wireshark, indicating that the original data segments were likely lost or delayed in transit.
 * **Impact:** Analyzed how these retransmissions affected the overall throughput of the stream.
+
+* ## Findings
+- DNS traffic resolved domains correctly
+- TCP connections followed expected handshake patterns
+- Retransmissions observed were normal and common in real-world traffic
+
+## Conclusion
+This project helped me understand how normal network traffic behaves and how to distinguish expected retransmissions from suspicious activity — a key skill for SOC analysts.

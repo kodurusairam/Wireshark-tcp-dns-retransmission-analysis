@@ -1,143 +1,53 @@
-Wireshark Network Traffic Analysis – SOC Mini Project
-Project Overview
 
-This project demonstrates offline PCAP analysis using Wireshark to understand normal network behavior and distinguish benign anomalies from malicious activity.
-The analysis was performed from a SOC analyst perspective using real user-generated traffic.
+# Project: Wireshark Network Traffic Analysis Project
 
-Objective
 
-Capture live network traffic and save it as a PCAP file
+## Overview
 
-Perform offline packet analysis using Wireshark
+This project involves a comprehensive deep-dive into network traffic using **Wireshark**. The analysis covers the full lifecycle of a web request: from the initial DNS query and TCP handshake to identifying packet loss via retransmissions.
 
-Analyze TCP sessions, DNS queries, and retransmissions
+---
 
-Validate whether observed anomalies are benign or malicious
+## 1. Data Source: PCAP Analysis
 
-Tools Used
+The foundation of this analysis is the provided `.pcap` (Packet Capture) file. This file contains raw frames captured from a network interface, allowing for the inspection of Layer 2 through Layer 7 protocols.
 
-Wireshark
+* **File Name:** `network_dump.pcap`
+* **Tooling:** Wireshark / TShark
 
-Web browser (for traffic generation)
+---
 
-Traffic Generated
+## 2. TCP Handshake & Stream Analysis
 
-The following legitimate user activities were performed during capture:
+To establish a reliable connection, the analysis focuses on the **TCP Three-Way Handshake**. By following the TCP stream, we can see the synchronization between the client and the server.
 
-YouTube video streaming
+### The Handshake Process
 
-LinkedIn browsing
+1. **SYN:** Client sends a synchronization request.
+2. **SYN-ACK:** Server acknowledges and sends its own sync request.
+3. **ACK:** Client acknowledges the server, establishing the connection.
 
-Job search activity (SOC L1 roles)
+> **Note:** We utilized the **"Follow TCP Stream"** feature to isolate this specific conversation from background noise, ensuring the sequence numbers () and acknowledgment numbers () align correctly.
 
-This ensured realistic enterprise-style encrypted web traffic.
+---
 
-1️⃣ PCAP File Capture and Upload
+## 3. DNS Resolution & Service Verification (LinkedIn)
 
-Network traffic was captured and saved as a PCAP file
+This phase demonstrates how domain names are resolved to IP addresses and how to filter specific traffic in a crowded capture.
 
-The PCAP was later opened in Wireshark for offline analysis
+* **DNS Query:** Looked for `Standard query 0x... A linkedin.com`.
+* **Filtering:** Applied the display filter `dns || http || tls` to isolate the resolution and subsequent connection.
+* **LinkedIn Verification:** * Filtered specifically for `ip.addr == [LinkedIn_IP]`.
+* Verified the **Server Name Indication (SNI)** in the TLS Client Hello to confirm the traffic was successfully routed to LinkedIn.
 
-Offline analysis allows evidence preservation and deeper inspection without live traffic impact
 
-Outcome:
 
-PCAP file successfully loaded
+---
 
-Packet list populated with TCP, UDP, DNS, TLS, and STUN traffic
+## 4. TCP Retransmissions & Error Recovery
 
-2️⃣ TCP Analysis and TCP Stream (Handshake Validation)
-TCP Analysis
+Network conditions aren't always perfect. This section documents the identification of **TCP Retransmissions**, which occur when a sender does not receive an ACK within the expected RTO (Retransmission Timeout).
 
-Applied the display filter:
-
-tcp
-
-
-Observed TCP packets using port 443 (HTTPS)
-
-Verified normal TCP session behavior and acknowledgements
-
-TCP Stream Analysis
-
-Followed a TCP stream using:
-
-Follow → TCP Stream
-
-
-Observed encrypted client–server communication
-
-Outcome:
-
-TCP three-way handshake behavior validated
-
-Encrypted HTTPS traffic confirmed
-
-No plaintext data exposed (expected behavior)
-
-3️⃣ DNS Analysis and LinkedIn Verification
-DNS Filtering
-
-Applied the display filter:
-
-dns
-
-
-Observed DNS queries and responses between the local system and DNS resolver
-
-Domain Verification
-
-Used string search with the keyword:
-
-linkedin
-
-
-Identified DNS queries for:
-
-merchantpool1.linkedin.com
-
-
-Verified that the domain was resolved through standard DNS workflow
-
-Outcome:
-
-DNS queries were user-initiated
-
-Domains belonged to legitimate services (LinkedIn, Google)
-
-No suspicious or algorithmically generated domains observed
-
-4️⃣ TCP Retransmission Analysis (Benign Anomaly)
-Retransmission Detection
-
-Applied the display filter:
-
-tcp.analysis.retransmission
-
-
-Observed multiple TCP retransmission packets highlighted in red
-
-Verification
-
-Destination port: 443 (HTTPS)
-
-Destination IPs: public cloud/CDN addresses
-
-Occurred during video streaming and browsing activity
-
-Outcome:
-
-Retransmissions attributed to normal network conditions
-(e.g., congestion, Wi-Fi interference, high-bandwidth traffic)
-
-No indicators of compromise detected
-
-Key Findings
-
-Traffic consisted of normal encrypted HTTPS communication
-
-DNS queries resolved legitimate domains
-
-TCP retransmissions were benign and expected
-
-No malicious activity or threat indicators were identified
+* **Identification:** Used the filter `tcp.analysis.retransmission`.
+* **Observation:** Highlighted packets marked in **Black/Red** by Wireshark, indicating that the original data segments were likely lost or delayed in transit.
+* **Impact:** Analyzed how these retransmissions affected the overall throughput of the stream.
